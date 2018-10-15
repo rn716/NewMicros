@@ -17,6 +17,7 @@ myTable db	0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07
 	; ******* Main programme *********************
 start 	movlw 	0x0
 	movwf	TRISE, ACCESS	; Port E all outputs
+	movwf	TRISD, ACCESS	; Port D all outputs
 	lfsr	FSR0, myArray	; Load FSR0 with address in RAM	
 	movlw	upper(myTable)	; address of data in PM
 	movwf	TBLPTRU		; load upper bits to TBLPTRU
@@ -27,8 +28,11 @@ start 	movlw 	0x0
 	movlw	.8		; 8 bytes to read
 	movwf 	counter		; our counter register
 loop 	tblrd*+			; move one byte from PM to TABLAT, increment TBLPRT
-	movff	TABLAT, PORTE; move read data from TABLAT to (FSR0), increment FSR0
-	;movff 	FSR0, PORTC
+	movff	TABLAT, PORTE   ;move read data from TABLAT to PORTE
+	movlw	0x00
+	movwf 	PORTD		;CP set to low
+	movlw	0x01
+	movwf 	PORTD		;CP lo to hi
 	decfsz	counter		; count down to zero
 	bra	loop		; keep going until finished
 	
