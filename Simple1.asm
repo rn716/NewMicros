@@ -9,6 +9,8 @@
 	; ******* Programme FLASH read Setup Code ****  
 setup	bcf	EECON1, CFGS	; point to Flash program memory  
 	bsf	EECON1, EEPGD 	; access Flash program memory
+	movlw 	0x0
+	movwf	TRISC, ACCESS	    ; Port C all outputs
 	goto	start
 	; ******* My data and where to put it in RAM *
 myTable db	0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07
