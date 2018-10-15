@@ -28,11 +28,11 @@ start 	movlw 	0x0
 	movlw	.8		; 8 bytes to read
 	movwf 	counter		; our counter register
 loop 	tblrd*+			; move one byte from PM to TABLAT, increment TBLPRT
-	movff	TABLAT, PORTE   ;move read data from TABLAT to PORTE
+	movff	TABLAT, PORTE   ; move read data from TABLAT to PORTE
 	movlw	0x00
-	movwf 	PORTD		;CP set to low
+	movwf 	PORTD		; CP set to low
 	movlw	0x01
-	movwf 	PORTD		;CP lo to hi
+	movwf 	PORTD		; CP lo to hi
 	decfsz	counter		; count down to zero
 	bra	loop		; keep going until finished
 	
