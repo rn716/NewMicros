@@ -35,38 +35,27 @@ loop 	movlw 	0x02
 	movwf	PORTD		; OE disables memory outputs
 	movlw 	0x0		
 	movwf	TRISE, ACCESS	; Port E all outputs enabled
+	nop
 	tblrd*+			; move one byte, PM to TABLAT, increment TBLPRT
 	movff	TABLAT, PORTE   ; move read data from TABLAT to PORTE
-	;movlw	0x00
-	;movwf 	PORTD		; CP already set to low on line 30
-	movlw	0x03		; so OE is still high to disable PORTE output
+	nop
+	movlw	0x03		; so OE is still high to disable memory output
 	movwf 	PORTD		; CP lo to hi - clock rising slope for writing
+	nop
 	
-				;write to Memory 2
-	
-	clrf    TRISE	; Port E all outputs disabled/enable input
+				; write to Memory 2
+				
+	movlw 	0xff		
+	movwf	TRISE, ACCESS	; Port E all outputs enabled
+	nop			
+	;setf    TRISE, ACCESS		; Port E all outputs disabled/enable input
 	movlw	0x01		; OE low to enable memory output - CP stays hi
 	movwf 	PORTD		; CP hi to lo - clock falling slope - no action
 	
 	movff	PORTE, PORTC
 	movlw 	0x02
 	movwf	PORTD		; OE disables memory outputs
-	
-	
-	
 
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	decfsz	counter		; count down to zero
 	bra	loop		; keep going until finished
 	
