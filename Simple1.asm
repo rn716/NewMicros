@@ -46,7 +46,7 @@ loop 	movlw 	0x02
 				; write to Memory 2
 				
 	movlw 	0xff		
-	movwf	TRISE, ACCESS	; Port E all outputs enabled
+	movwf	TRISE, ACCESS	; Port E all outputs disabled/enable input
 	nop			
 	;setf    TRISE, ACCESS		; Port E all outputs disabled/enable input
 	movlw	0x01		; OE low to enable memory output - CP stays hi
