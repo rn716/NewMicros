@@ -11,7 +11,7 @@ setup	bcf	EECON1, CFGS	; point to Flash program memory
 	bsf	EECON1, EEPGD 	; access Flash program memory
 	goto	start
 	; ******* My data and where to put it in RAM *
-myTable db	0x0f,0xff
+myTable db	0x55,0xAA
 	constant myArray=0x400	; Address in RAM for data
 	constant counter=0x10	; Address of counter variable
 	; ******* Main programme *********************
@@ -22,7 +22,7 @@ start 	nop
 	movlw   0x00
 	movwf	TRISC, ACCESS	; Port C all outputs
 	movwf	TRISD, ACCESS	; Port D all outputs
-	movwf	TRISF, ACCESS	; Port F all outputs
+	movwf	TRISH, ACCESS	; Port H all outputs
 	movlw	upper(myTable)	; address of data in PM
 	movwf	TBLPTRU		; load upper bits to TBLPTRU
 	movlw	high(myTable)	; address of data in PM
@@ -66,7 +66,7 @@ loop 	movlw 	0x0A
 	movlw	0x02		; OE low to enable memory output of byte 2
 	movwf 	PORTD		; CP stays low
 	nop
-	movff	PORTE, PORTF	; move the byte in PORTE onto PORTC
+	movff	PORTE, PORTH	; move the byte in PORTE onto PORTH
 	movlw 	0x0A
 	movwf	PORTD		; OE disables memory outputs of byte 2
 	
