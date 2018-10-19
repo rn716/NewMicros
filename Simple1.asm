@@ -32,6 +32,21 @@ SPI_MasterInit	; Set Clock edge to positive
 	return
 	
 delay
+	movlw   0xff
+        movwf   0x20, ACCESS
+	call    subrout, 0
+	nop
+
+subrout movwf   0x30, ACCESS
+	call    subrou2, 0
+	nop
+	decfsz  0x20, F, ACCESS
+        bra     subrout
+        return 
+	
+subrou2 decfsz  0x30, F, ACCESS
+        bra     subrou2
+        return  
 	
 
 SPI_MasterTransmit  ; Start transmission of data (held in W)
