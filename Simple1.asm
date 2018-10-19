@@ -9,15 +9,16 @@
 	; ******* Programme FLASH read Setup Code ****  
 setup	bcf	EECON1, CFGS	; point to Flash program memory  
 	bsf	EECON1, EEPGD 	; access Flash program memory
+	call	SPI_MasterInit
 	goto	start
-	; ******* My data and where to put it in RAM *
-myTable db	0x55
-	constant myArray=0x400	; Address in RAM for data
-	constant counter=0x10	; Address of counter variable
+
 	; ******* Main programme *********************
 start
+	;clrf	TRISD
 	movlw   0x55
-	
+	call	SPI_MasterTransmit
+	call	delay
+	goto	0
 	
 	
 SPI_MasterInit	; Set Clock edge to positive
@@ -28,10 +29,14 @@ SPI_MasterInit	; Set Clock edge to positive
 	; SDO2 output; SCK2 output
 	bcf	TRISD, SDO2
 	bcf	TRISD, SCK2
-	return 
+	return
+	
+delay
+	
 
 SPI_MasterTransmit  ; Start transmission of data (held in W)
-	movwf 	SSP2BUF 
+	movwf 	SSP2BUF
+	call    delay
 Wait_Transmit	; Wait for transmission to complete 
 	btfss 	PIR2, SSP2IF
 	bra 	Wait_Transmit
@@ -39,9 +44,7 @@ Wait_Transmit	; Wait for transmission to complete
 	return
 
 	
-	
-	
-	
+	end
 	
 	
 	
