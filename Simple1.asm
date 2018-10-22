@@ -39,7 +39,7 @@ start 	movlw   0xff
 	movwf	TBLPTRL		; load low byte to TBLPTRL
 	movlw	myTable_l	; bytes to read
 	movwf 	counter		; our counter register
-	;call    LCD_line2
+	
 	
 	
 loop 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
@@ -65,6 +65,7 @@ operations_loop
 	movlw	0x02
 	cpfsgt	PORTE, ACCESS 
 	goto	Move_Display
+	goto	operations_loop
 	
 Clear_Display
 	call	LCD_Clear_Display
@@ -73,7 +74,7 @@ Clear_Display
 Move_Display
 	call	LCD_Clear_Display
 	call	LCD_Move_Display
-	goto	loop
+	goto	start
 	
 	
 	goto	$		; goto current line in code
