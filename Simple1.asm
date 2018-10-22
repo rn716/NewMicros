@@ -1,7 +1,8 @@
 	#include p18f87k22.inc
 
 	extern	UART_Setup, UART_Transmit_Message  ; external UART subroutines
-	extern  LCD_Setup, LCD_Write_Message, LCD_Clear_Display	    ; external LCD subroutines
+	extern  LCD_Setup, LCD_Write_Message, LCD_Clear_Display;, LCD_line2	    ; external LCD subroutines
+	extern	LCD_Move_Display
 	
 acs0	udata_acs   ; reserve data space in access ram
 counter	    res 1   ; reserve one byte for a counter variable
@@ -28,7 +29,7 @@ setup	bcf	EECON1, CFGS	; point to Flash program memory
 	
 	; ******* Main programme ****************************************
 start 	movlw   0xff
-	movwf	TRISH, ACCESS	
+	movwf	TRISE, ACCESS	; PORTE all inputs
 	lfsr	FSR0, myArray	; Load FSR0 with address in RAM	
 	movlw	upper(myTable)	; address of data in PM
 	movwf	TBLPTRU		; load upper bits to TBLPTRU
@@ -38,6 +39,9 @@ start 	movlw   0xff
 	movwf	TBLPTRL		; load low byte to TBLPTRL
 	movlw	myTable_l	; bytes to read
 	movwf 	counter		; our counter register
+	;call    LCD_line2
+	
+	
 loop 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	movff	TABLAT, POSTINC0; move data from TABLAT to (FSR0), inc FSR0	
 	decfsz	counter		; count down to zero
@@ -51,11 +55,26 @@ loop 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	lfsr	FSR2, myArray
 	call	UART_Transmit_Message
 
-clr_loop
+operations_loop
+	movlw	0x00
+	cpfsgt	PORTE, ACCESS
+	goto    operations_loop	;wait for the input on PORTE
+	movlw	0x01
+	cpfsgt	PORTE, ACCESS
+	goto	Clear_Display
 	movlw	0x02
-	cpfsgt	PORTH, ACCESS
-	goto    clr_loop
+	cpfsgt	PORTE, ACCESS 
+	goto	Move_Display
+	
+Clear_Display
 	call	LCD_Clear_Display
+	goto	operations_loop
+
+Move_Display
+	call	LCD_Clear_Display
+	call	LCD_Move_Display
+	goto	loop
+	
 	
 	goto	$		; goto current line in code
 
