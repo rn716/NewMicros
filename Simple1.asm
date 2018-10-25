@@ -28,17 +28,80 @@ setup	bcf	EECON1, CFGS	; point to Flash program memory
 	goto	start
 	
 	; ******* Main programme ****************************************
-start 	movlw   0xff
+start 	nop
+	
+Character Setup
+	movlw	b'00110001'	; 1 
+	movwf	0x77
+	movlw	b'00110010'	; 2
+	movwf	0xB7
+	movlw	b'00110011'	; 3
+	movwf	0xD7
+	movlw	b'00110100'	; 4
+	movwf	0x7B
+	movlw	b'00110101'	; 5
+	movwf	0xBB
+	movlw	b'00110110'	; 6
+	movwf	0xDB
+	movlw	b'00110111'	; 7
+	movwf	0x7D
+	movlw	b'00111000'	; 8
+	movwf	0xBD
+	movlw	b'00111001'	; 9
+	movwf	0xDD
+	movlw	b'00110000'	; 0
+	movwf	0xBE
+	movlw	b'01000001'	; A
+	movwf	0x7E
+	movlw	b'01000010'	; B
+	movwf	0xDE
+	movlw	b'01000011'	; C
+	movwf	0xEE
+	movlw	b'01000100'	; D
+	movwf	0xED
+	movlw	b'01000101'	; E
+	movwf	0xEB
+	movlw	b'01000110'	; F
+	movwf	0xE7
+	
+	
+	
+;	movlw   0xff
+;	movwf	TRISD, ACCESS	; PORTD all inputs
+;	lfsr	FSR0, myArray	; Load FSR0 with address in RAM	
+;	movlw	upper(myTable)	; address of data in PM
+;	movwf	TBLPTRU		; load upper bits to TBLPTRU
+;	movlw	high(myTable)	; address of data in PM
+;	movwf	TBLPTRH		; load high byte to TBLPTRH
+;	movlw	low(myTable)	; address of data in PM
+;	movwf	TBLPTRL		; load low byte to TBLPTRL
+;	movlw	myTable_l	; bytes to read
+;	movwf 	counter		; our counter register
+
+keypad_read_loop
+	banksel PADCFG1		; PADCFG1 is not in Access Bank!!
+	bsf	PADCFG1, REPU, BANKED	; PortE pull-ups on 
+	movlb	0x00		; set BSR back to Bank 0
+	clrf	LATE
+	movlw   0x0F
 	movwf	TRISE, ACCESS	; PORTE all inputs
-	lfsr	FSR0, myArray	; Load FSR0 with address in RAM	
-	movlw	upper(myTable)	; address of data in PM
-	movwf	TBLPTRU		; load upper bits to TBLPTRU
-	movlw	high(myTable)	; address of data in PM
-	movwf	TBLPTRH		; load high byte to TBLPTRH
-	movlw	low(myTable)	; address of data in PM
-	movwf	TBLPTRL		; load low byte to TBLPTRL
-	movlw	myTable_l	; bytes to read
-	movwf 	counter		; our counter register
+	movlw	0xFF
+	movwf	delay_count
+	;call	delay
+	movff	PORTE, 0x08
+	banksel PADCFG1		; PADCFG1 is not in Access Bank!!
+	bsf	PADCFG1, REPU, BANKED	; PortE pull-ups on 
+	movlb	0x00		; set BSR back to Bank 0
+	clrf	LATE
+	movlw   0xF0
+	movwf	TRISE, ACCESS	; PORTE all inputs
+	movlw	0xFF
+	movwf	delay_count
+	;call	delay
+	movf	PORTE, ACCESS
+	addwf	0x08, W
+	
+	bra	keypad_read_loop
 	
 	
 	
@@ -57,13 +120,13 @@ loop 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 
 operations_loop
 	movlw	0x00
-	cpfsgt	PORTE, ACCESS
-	goto    operations_loop	;wait for the input on PORTE
+	cpfsgt	PORTD, ACCESS
+	goto    operations_loop	;wait for the input on PORTD
 	movlw	0x01
-	cpfsgt	PORTE, ACCESS
+	cpfsgt	PORTD, ACCESS
 	goto	Clear_Display
 	movlw	0x02
-	cpfsgt	PORTE, ACCESS 
+	cpfsgt	PORTD, ACCESS 
 	goto	Move_Display
 	goto	operations_loop
 	
@@ -83,5 +146,7 @@ Move_Display
 delay	decfsz	delay_count	; decrement until zero
 	bra delay
 	return
+	
+
 
 	end
