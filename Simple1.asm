@@ -90,15 +90,19 @@ keypad_read_loop
 	movwf	delay_count
 	call	delay
 	movff	PORTE, keypadval; read in rows
+	movlw	0x0f		
+	cpfslt	keypadval
+	goto	keypad_read_loop; go to top of loop as no button is pressed
+	
 	movlw   0xF0
 	movwf	TRISE, ACCESS	; PORTE all inputs
 	movlw	0xFF
 	movwf	delay_count
 	call	delay
-	movf	PORTE, W	; read in columns
+	movf	PORTE, W	; read in columns	
 	addwf	keypadval, F	; add to get full coordinates of button
-	movlw	0xff		; go to top of loop if keypadval is 0xff
-	cpfslt	keypadval	; as no buttons have been pressed
+	movlw	0xEF		
+	cpfslt	keypadval	; go to top of loop as button has been released
 	goto	keypad_read_loop
 	movff	keypadval, FSR2L
 	clrf	FSR2H
