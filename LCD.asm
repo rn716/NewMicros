@@ -50,8 +50,8 @@ LCD_Setup
 LCD_Clear_Display
 	movlw	b'00000001'	; display clear
 	call	LCD_Send_Byte_I
-	movlw	.10		; wait 40us
-	call	LCD_delay_x4us
+	movlw	.2		; wait 2ms
+	call	LCD_delay_ms
 	return
 	
 LCD_Move_Display
