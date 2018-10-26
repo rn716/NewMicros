@@ -31,7 +31,7 @@ setup	bcf	EECON1, CFGS	; point to Flash program memory
 	; ******* Main programme ****************************************
 start 	nop
 	
-Character_Setup
+Character_Setup	    ; save all the characters at address which is coordinate
 	movlw	b'00110001'	; 1 
 	movwf	0x77
 	movlw	b'00110010'	; 2
@@ -86,18 +86,19 @@ keypad_read_loop
 	clrf	LATE
 	movlw   0x0F
 	movwf	TRISE, ACCESS	; PORTE all inputs
-	movlw	0xFF
+	movlw	0xFF		; 256 loop delay 
 	movwf	delay_count
 	call	delay
-	movff	PORTE, keypadval
+	movff	PORTE, keypadval; read in rows
 	movlw   0xF0
 	movwf	TRISE, ACCESS	; PORTE all inputs
 	movlw	0xFF
 	movwf	delay_count
 	call	delay
-	movf	PORTE,W
-	addwf	keypadval, F
-	cpfslt	ff
+	movf	PORTE, W	; read in columns
+	addwf	keypadval, F	; add to get full coordinates of button
+	movlw	0xff		; go to top of loop if keypadval is 0xff
+	cpfslt	keypadval	; as no buttons have been pressed
 	goto	keypad_read_loop
 	movff	keypadval, FSR2L
 	clrf	FSR2H
@@ -108,8 +109,6 @@ keypad_read_loop
 	movlw	0xFF
 	movwf	delay_count
 	call	delay
-;	lfsr	FSR2, 
-;	call	UART_Transmit_Message
 	
 	bra	keypad_read_loop
 	
