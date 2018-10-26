@@ -7,6 +7,7 @@
 acs0	udata_acs   ; reserve data space in access ram
 counter	    res 1   ; reserve one byte for a counter variable
 delay_count res 1   ; reserve one byte for counter in the delay routine
+keypadval   res 1   ; ...
 
 tables	udata	0x400    ; reserve data anywhere in RAM (here at 0x400)
 myArray res 0x80    ; reserve 128 bytes for message data
@@ -30,7 +31,7 @@ setup	bcf	EECON1, CFGS	; point to Flash program memory
 	; ******* Main programme ****************************************
 start 	nop
 	
-Character Setup
+Character_Setup
 	movlw	b'00110001'	; 1 
 	movwf	0x77
 	movlw	b'00110010'	; 2
@@ -87,19 +88,28 @@ keypad_read_loop
 	movwf	TRISE, ACCESS	; PORTE all inputs
 	movlw	0xFF
 	movwf	delay_count
-	;call	delay
-	movff	PORTE, 0x08
-	banksel PADCFG1		; PADCFG1 is not in Access Bank!!
-	bsf	PADCFG1, REPU, BANKED	; PortE pull-ups on 
-	movlb	0x00		; set BSR back to Bank 0
-	clrf	LATE
+	call	delay
+	movff	PORTE, keypadval
 	movlw   0xF0
 	movwf	TRISE, ACCESS	; PORTE all inputs
 	movlw	0xFF
 	movwf	delay_count
-	;call	delay
-	movf	PORTE, ACCESS
-	addwf	0x08, W
+	call	delay
+	movf	PORTE,W
+	addwf	keypadval, F
+	cpfslt	ff
+	goto	keypad_read_loop
+	movff	keypadval, FSR2L
+	clrf	FSR2H
+
+	movlw   0x01
+	
+	call	LCD_Write_Message
+	movlw	0xFF
+	movwf	delay_count
+	call	delay
+;	lfsr	FSR2, 
+;	call	UART_Transmit_Message
 	
 	bra	keypad_read_loop
 	
@@ -112,10 +122,12 @@ loop 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 		
 	movlw	myTable_l-1	; output message to LCD (leave out "\n")
 	lfsr	FSR2, myArray
+	nop
 	call	LCD_Write_Message
 
 	movlw	myTable_l	; output message to UART
 	lfsr	FSR2, myArray
+	nop
 	call	UART_Transmit_Message
 
 operations_loop
