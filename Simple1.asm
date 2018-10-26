@@ -106,9 +106,7 @@ keypad_read_loop
 	movlw   0x01
 	
 	call	LCD_Write_Message
-	movlw	0xFF
-	movwf	delay_count
-	call	delay
+	call	delayy
 	
 	bra	keypad_read_loop
 	
@@ -158,6 +156,27 @@ delay	decfsz	delay_count	; decrement until zero
 	bra delay
 	return
 	
+	
+; a delay subroutine
+
+delayy decfsz  0xff, F, ACCESS
+        bra     delay1
+        return  0
+	
+delay1 movlw   0xff
+	call    delay2, 0
+	nop
+
+delay2 movwf   0xff, ACCESS
+	call    delay3, 0
+	nop
+	decfsz  0x20, F, ACCESS
+        bra     delay2
+        return  0
+	
+delay3 decfsz  0x30, F, ACCESS
+        bra     delay3
+        return  0
 
 
 	end
