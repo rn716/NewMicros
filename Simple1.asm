@@ -4,6 +4,7 @@
 	extern  LCD_Setup, LCD_Write_Message	    ; external LCD subroutines
 	extern	LCD_Write_Hex			    ; external LCD subroutines
 	extern  ADC_Setup, ADC_Read		    ; external ADC routines
+	extern	multiply816, multiply1616
 	
 acs0	udata_acs   ; reserve data space in access ram
 counter	    res 1   ; reserve one byte for a counter variable
@@ -24,10 +25,15 @@ main	code
 	; ******* Programme FLASH read Setup Code ***********************
 setup	bcf	EECON1, CFGS	; point to Flash program memory  
 	bsf	EECON1, EEPGD 	; access Flash program memory
+	call	multiply816
+	
+	end
+	
+	
 	call	UART_Setup	; setup UART
 	call	LCD_Setup	; setup LCD
 	call	ADC_Setup	; setup ADC
-	goto	start
+	;goto	start
 	
 	; ******* Main programme ****************************************
 start 	lfsr	FSR0, myArray	; Load FSR0 with address in RAM	
@@ -64,5 +70,3 @@ measure_loop
 delay	decfsz	delay_count	; decrement until zero
 	bra delay
 	return
-
-	end
