@@ -4,10 +4,7 @@
 	extern  LCD_Setup, LCD_Write_Message, LCD_Clear_Display;, LCD_line2	    ; external LCD subroutines
 	extern	LCD_Move_Display
 	
-acs0	udata_acs   ; reserve data space in access ram
-counter	    res 1   ; reserve one byte for a counter variable
-delay_count res 1   ; reserve one byte for counter in the delay routine
-keypadval   res 1   ; ...
+a  
 
 tables	udata	0x400    ; reserve data anywhere in RAM (here at 0x400)
 myArray res 0x80    ; reserve 128 bytes for message data
@@ -84,49 +81,13 @@ keypad_read_loop
 	bsf	PADCFG1, REPU, BANKED	; PortE pull-ups on 
 	movlb	0x00		; set BSR back to Bank 0
 	clrf	LATE
-	movlw   0x0F
-	movwf	TRISE, ACCESS	; PORTE all inputs
-	movlw	0xFF		; 256 loop delay 
-	movwf	delay_count
-	call	delay
-	movff	PORTE, keypadval; read in rows
-	movlw	0x0f		
-	cpfslt	keypadval
-	goto	keypad_read_loop; go to top of loop as no button is pressed
-	
-	movlw   0xF0
-	movwf	TRISE, ACCESS	; PORTE all inputs
-	movlw	0xFF
-	movwf	delay_count
-	call	delay
-	movf	PORTE, W	; read in columns	
-	addwf	keypadval, F	; add to get full coordinates of button
-	movlw	0xEF		
-	cpfslt	keypadval	; go to top of loop as button has been released
+	call	keypad_read_rows
+	call	keypad_read_columns
+	call	keypad_write_char
+	call	operations_loop
 	goto	keypad_read_loop
-	movff	keypadval, FSR2L
-	clrf	FSR2H
-
-	movlw   0x01
 	
-	call	LCD_Write_Message
-	movlw	0xff
-	movwf	0x30
-	movwf	0x20
-	call	delayy
-	call	delayy
-	call	delayy
-	call	delayy
-	call	delayy
-	call	delayy
-	call	delayy
-	call	delayy
-	
-	
-	bra	keypad_read_loop
-	
-	
-	
+		
 loop 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	movff	TABLAT, POSTINC0; move data from TABLAT to (FSR0), inc FSR0	
 	decfsz	counter		; count down to zero
@@ -152,7 +113,54 @@ operations_loop
 	movlw	0x02
 	cpfsgt	PORTD, ACCESS 
 	goto	Move_Display
-	goto	operations_loop
+	return
+	
+	
+	
+keypad_read_rows
+	movlw   0x0F
+	movwf	TRISE, ACCESS	; PORTE all inputs
+	movlw	0xFF		; 256 loop delay 
+	movwf	delay_count
+	call	delay		; delay for voltage to settle
+	movff	PORTE, keypadval; read in rows
+	movlw	0x0f		
+	cpfslt	keypadval
+	goto	keypad_read_loop; go to top of loop as no button is pressed
+	return
+
+
+keypad_read_columns
+	movlw   0xF0
+	movwf	TRISE, ACCESS	; PORTE all inputs
+	movlw	0xFF
+	movwf	delay_count
+	call	delay		; delay for voltage to settle
+	movf	PORTE, W	; read in columns	
+	addwf	keypadval, F	; add to get full coordinates of button
+	movlw	0xEF		
+	cpfslt	keypadval	; go to top of loop as button has been released
+	goto	keypad_read_loop
+	
+	
+keypad_write_char
+	movff	keypadval, FSR2L
+	clrf	FSR2H
+	movlw   0x01		; length of the message is 1 byte
+	call	LCD_Write_Message
+	movlw	0xff
+	movwf	0x30
+	movwf	0x20
+	call	delayy		; slow down how fast the characters are written
+	call	delayy
+	call	delayy
+	call	delayy
+	call	delayy
+	call	delayy
+	call	delayy
+	call	delayy
+	return
+	
 	
 Clear_Display
 	call	LCD_Clear_Display
