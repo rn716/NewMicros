@@ -3,9 +3,13 @@
 	extern	UART_Setup, UART_Transmit_Message  ; external UART subroutines
 	extern  LCD_Setup, LCD_Write_Message, LCD_Clear_Display;, LCD_line2	    ; external LCD subroutines
 	extern	LCD_Move_Display
-	
-a  
 
+acs0	udata_acs   ; reserve data space in access ram
+counter	    res 1   ; reserve one byte for a counter variable
+delay_count res 1   ; reserve one byte for counter in the delay routine
+	
+keypadval   res 1   ; reserve one byte for the current keypad output
+ 
 tables	udata	0x400    ; reserve data anywhere in RAM (here at 0x400)
 myArray res 0x80    ; reserve 128 bytes for message data
 
@@ -62,29 +66,23 @@ Character_Setup	    ; save all the characters at address which is coordinate
 	movlw	b'01000110'	; F
 	movwf	0xE7
 	
-	
-	
-;	movlw   0xff
-;	movwf	TRISD, ACCESS	; PORTD all inputs
-;	lfsr	FSR0, myArray	; Load FSR0 with address in RAM	
-;	movlw	upper(myTable)	; address of data in PM
-;	movwf	TBLPTRU		; load upper bits to TBLPTRU
-;	movlw	high(myTable)	; address of data in PM
-;	movwf	TBLPTRH		; load high byte to TBLPTRH
-;	movlw	low(myTable)	; address of data in PM
-;	movwf	TBLPTRL		; load low byte to TBLPTRL
-;	movlw	myTable_l	; bytes to read
-;	movwf 	counter		; our counter register
+
 
 keypad_read_loop
 	banksel PADCFG1		; PADCFG1 is not in Access Bank!!
 	bsf	PADCFG1, REPU, BANKED	; PortE pull-ups on 
 	movlb	0x00		; set BSR back to Bank 0
 	clrf	LATE
-	call	keypad_read_rows
-	call	keypad_read_columns
-	call	keypad_write_char
 	call	operations_loop
+	call	keypad_read_rows
+	movlw	0x0f
+	cpfslt	keypadval
+	goto	keypad_read_loop; go to top of loop as no button is pressed
+	call	keypad_read_columns
+	movlw	0xEF		
+	cpfslt	keypadval	; go to top of loop as button has been released
+	goto	keypad_read_loop
+	call	keypad_write_char
 	goto	keypad_read_loop
 	
 		
@@ -106,7 +104,7 @@ loop 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 operations_loop
 	movlw	0x00
 	cpfsgt	PORTD, ACCESS
-	goto    operations_loop	;wait for the input on PORTD
+	return	; no input on PORTD
 	movlw	0x01
 	cpfsgt	PORTD, ACCESS
 	goto	Clear_Display
@@ -124,9 +122,6 @@ keypad_read_rows
 	movwf	delay_count
 	call	delay		; delay for voltage to settle
 	movff	PORTE, keypadval; read in rows
-	movlw	0x0f		
-	cpfslt	keypadval
-	goto	keypad_read_loop; go to top of loop as no button is pressed
 	return
 
 
@@ -138,9 +133,7 @@ keypad_read_columns
 	call	delay		; delay for voltage to settle
 	movf	PORTE, W	; read in columns	
 	addwf	keypadval, F	; add to get full coordinates of button
-	movlw	0xEF		
-	cpfslt	keypadval	; go to top of loop as button has been released
-	goto	keypad_read_loop
+	return
 	
 	
 keypad_write_char
@@ -164,14 +157,12 @@ keypad_write_char
 	
 Clear_Display
 	call	LCD_Clear_Display
-	goto	operations_loop
+	return
+	;goto	operations_loop
 
 Move_Display
 	call	LCD_Clear_Display
 	call	LCD_Move_Display
-	goto	start
-	
-	
 	goto	$		; goto current line in code
 
 	; a delay subroutine if you need one, times around loop in delay_count
@@ -190,6 +181,7 @@ delay1  movlw	0xff
 	movwf	0x20
 	call    delay2, 0
 	nop
+	
 
 delay2  movwf   0x30, ACCESS
 	call    delay3, 0
